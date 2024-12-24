@@ -52,6 +52,7 @@ int main(int argc, char *args[]) {
             istream& input = static_cast<istream&>(in);
             string suffix = filenames.size() <= 1 ? "" : "\x1b[35m"+ filename + ":" +"\x1b[m"; 
             grep_i(&input, suffix);
+            in.close();
         }
     }  
     return 0;
