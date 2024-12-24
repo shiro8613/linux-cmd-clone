@@ -1,60 +1,58 @@
 #include<iostream>
 #include<regex>
 #include<fstream>
+#include<vector>
 using namespace std;
 
+bool invert = false;
+regex searchRegex;
+
+void grep_i(istream* input, string suffix) {
+    string line;
+    while (getline(*input, line) && !line.empty()) {
+        if (!regex_search(line, searchRegex) == invert) {
+            cout << suffix << " " << regex_replace(line, searchRegex, "\x1b[31m$&\x1b[m") << endl;
+        }
+    }
+}
+
 int main(int argc, char *args[]) {
-    string filename;
-    bool invert = false;
+    vector<string> filenames;
 
     string arg;
-    string searchText;
     if (argc < 2) {
-        cerr << "option or searchText here." << endl;
+        cerr << "searchText here." << endl;
         return -1;
     }
-    for (int i=1; i < argc; i++) {
+    string searchText = args[1];
+    for (int i=2; i < argc; i++) {
         arg = args[i];
         if (arg.find("-v") != string::npos) {
             invert = true;
             continue;
         }
-        if (arg.find("-f") != string::npos) {
-            if (i+1 < argc) {
-                filename = args[i+1];
-                i += 1;
-                continue;
-            } else {
-                cerr << "filename please." << endl;
-                return -1;
-            }
-        }
-
-        searchText = arg;
+        filenames.push_back(arg);
     }
 
     if(searchText.empty()) {
         cerr << "searchText is empty." << endl;
         return -1;
     }
-    regex searchRegex(searchText);
+    searchRegex = basic_regex(searchText);
 
-    fstream in;    
-    if(!filename.empty()) {
-        in.open(filename);
-        if(!in) {
-            cerr << "failed to open " << filename << endl;
-            return -1;
-        }
-    }
+    if(filenames.empty()) {
+        grep_i(&cin, "");
+    } else {
+        for (string filename : filenames) {
+            fstream in(filename);
+            if (!in) {
+                cerr << filename << " is not exists." << endl;
+            }
 
-    istream& input = in.is_open() ? static_cast<istream&>(in) : cin;
-    string line;
-    while (getline(input, line) && !line.empty()) {
-        if (!regex_search(line, searchRegex) == invert) {
-            cout << regex_replace(line, searchRegex, "\x1b[31m$&\x1b[m") << endl;
+            istream& input = static_cast<istream&>(in);
+            string suffix = filenames.size() <= 1 ? "" : "\x1b[35m"+ filename + ":" +"\x1b[m"; 
+            grep_i(&input, suffix);
         }
     }  
-
     return 0;
 }
