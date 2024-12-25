@@ -5,7 +5,6 @@
 using namespace std;
 
 int main(int argc, char** args) {
-    vector<string> out;
     for (int i=1; i < argc; i++) {
         char* filename = args[i];
         fstream in(filename);
@@ -17,18 +16,14 @@ int main(int argc, char** args) {
         istream& input = static_cast<istream&>(in);
         string line;
         while (getline(input, line) && !line.empty()) {
-            out.push_back(line);
+            cout << line << endl;
         }
         in.close();
     }
 
-    string line;
     if(argc < 2) {
+        string line;
         while (getline(cin, line)){
-            cout << line << endl;
-        }
-    } else {
-        for (string line : out) {
             cout << line << endl;
         }
     }
