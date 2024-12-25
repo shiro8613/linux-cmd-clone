@@ -1,7 +1,6 @@
 #include<iostream>
 #include<regex>
 #include<fstream>
-#include<vector>
 using namespace std;
 
 bool invert = false;
@@ -17,43 +16,49 @@ void grep_i(istream* input, string suffix) {
 }
 
 int main(int argc, char *args[]) {
-    vector<string> filenames;
-
-    string arg;
     if (argc < 2) {
         cerr << "searchText here." << endl;
         return -1;
     }
-    string searchText = args[1];
+
+    searchRegex = basic_regex(args[1]);
+    
+    char** filenames = (char**)malloc(sizeof(char*) * argc);
+    string arg;
+    int filenames_idx = 0;
     for (int i=2; i < argc; i++) {
         arg = args[i];
         if (arg.find("-v") != string::npos) {
             invert = true;
             continue;
         }
-        filenames.push_back(arg);
+        filenames[filenames_idx] = args[i];
+        filenames_idx++;
     }
 
-    if(searchText.empty()) {
-        cerr << "searchText is empty." << endl;
-        return -1;
-    }
-    searchRegex = basic_regex(searchText);
-
-    if(filenames.empty()) {
+    if (argc <= 2) {
+        free(filenames);
         grep_i(&cin, "");
-    } else {
-        for (string filename : filenames) {
-            fstream in(filename);
-            if (!in) {
-                cerr << filename << " is not exists." << endl;
-            }
+        return 0;
+    }
 
-            istream& input = static_cast<istream&>(in);
-            string suffix = filenames.size() <= 1 ? "" : "\x1b[35m"+ filename + ":" +"\x1b[m"; 
-            grep_i(&input, suffix);
-            in.close();
+    string suffix;
+    fstream in;
+    for(int i=0; i < filenames_idx; i++) {
+        char* filename = filenames[i];
+        in.open(filename);
+        if (!in) {
+            cerr << filename << " is not exists." << endl;
         }
-    }  
+
+        istream& input = static_cast<istream&>(in);
+        
+        suffix = filenames_idx <= 1 ? "" : "\x1b[35m:" + string(filename) + "\x1b[m";
+        grep_i(&input, suffix);
+        in.close();
+    }
+
+    free(filenames);
+
     return 0;
 }
